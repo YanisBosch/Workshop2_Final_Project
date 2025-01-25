@@ -8,6 +8,7 @@ class playfield:
         self.seed = seed                    #fix seed for repeatability
         self.bombs = [[0 for x in range(self.size)] for y in range(self.size)]          #"b" = bomb, number = number of adjacent bombs
         self.playfield = [["h" for x in range(self.size)] for y in range(self.size)]    #"f" = flag, "n" = show number, "h" = hidden
+        self.flagnum = 0                    #to limit total available number of flags
 
     def __str__(self):
         spaces = len(str(self.size))+1      #variable used for clean printing of the arena
@@ -82,7 +83,6 @@ class playfield:
                         winbyflag = False
                     if (self.bombs[l][m] != "b" and self.playfield[l][m] != "n"):
                         winbyuncover = False
-            print(winbyflag)
             if winbyflag or winbyuncover:
                 return("win")
             else:
@@ -91,6 +91,8 @@ class playfield:
     def play_game(self):
         spaces = len(str(self.size))+1
         print("After each round please choose first whether to place a flag or check, and then input the row and column number when prompted. \nType exit at any time to exit the game.")
+        print("You will win if you place a flag on each bomb, or discover all spots without bombs. You can place at most " +str(self.numbombs) + " flags.")
+        print("There are " + str(self.numbombs) + " bombs to be found.")
         done = False
         while not done:
 
@@ -165,10 +167,15 @@ class playfield:
 
                 self.update_playfield(i,j)
             elif corf == "2":
-                if self.playfield[i][j] == "f":
+                if self.playfield[i][j] == "f":             #if there is already a flag remove it
                     self.playfield[i][j] = "n"
-                elif self.playfield[i][j] != "n":
-                    self.playfield[i][j] = "f"
+                    self.flagnum -= 1                       #update flag number counter
+                elif self.playfield[i][j] != "n":           #else if there is no number there place a flag
+                    if self.flagnum < self.numbombs:        #if there are not too many flags place one
+                        self.playfield[i][j] = "f"  
+                        self.flagnum += 1                   #update flag number counter
+                    else:
+                        print("You cannot place any more flags.")
 
             res = self.check_win(i,j)
 
@@ -190,7 +197,8 @@ class playfield:
                 done = True
 
         print("THANK YOU FOR PLAYING!")
-pf = playfield(15,10,420)
+
+pf = playfield(15,1,420)
 pf.initialise_game()
 pf.play_game()
 
