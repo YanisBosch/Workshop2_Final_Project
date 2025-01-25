@@ -59,9 +59,34 @@ class playfield:
         print("After each round please choose first whether to place a flag or check, and then input the row and column number when prompted \n")
         done = False
         while not done:
-            corf = input("Please select 1 to check for bombs or 2 to place a flag \n")
-            i = int(input("Please input a row number between 0 and " + str(self.size-1) + " \n"))
-            j = int(input("Please input a column number between 0 and " + str(self.size-1) + " \n"))
+            while True:
+                corf = input("Please select 1 to check for bombs or 2 to place a flag \n")
+                if corf == "1" or corf == "2":
+                    break
+                else:
+                    print("Incorrect input, please try again.")
+            print()
+            while True:
+                try:
+                    i = int(input("Please input a row number between 0 and " + str(self.size-1) + " \n"))
+                    if i >= 0 and i <= self.size-1:
+                        break
+                    else:
+                        print("Number not within specified range, please try again.")
+                except:
+                    print("Specified input was not an integer, please try again.")
+            print()
+
+            while True:
+                try:
+                    j = int(input("Please input a column number between 0 and " + str(self.size-1) + " \n"))
+                    if j >= 0 and j <= self.size-1:
+                        break
+                    else:
+                        print("Number not within specified range, please try again.")
+                except:
+                    print("Specified input was not an integer, please try again.")
+            
             if corf == "1":
                 self.playfield[i][j] = "n"
             elif corf == "2":
