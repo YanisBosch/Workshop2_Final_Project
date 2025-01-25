@@ -56,30 +56,53 @@ class playfield:
         self.count_bombs_all()
 
     def play_game(self):
-        print("After each round please choose first whether to place a flag or check, and then input the row and column number when prompted \n")
+        spaces = len(str(self.size))+1
+        print("After each round please choose first whether to place a flag or check, and then input the row and column number when prompted. \nType exit at any time to exit the game.")
         done = False
         while not done:
             while True:
                 corf = input("Please select 1 to check for bombs or 2 to place a flag \n")
                 if corf == "1" or corf == "2":
                     break
+                elif corf == "exit":
+                    done = True
+                    break
                 else:
                     print("Incorrect input, please try again.")
-            print()
+
+            print("-"*(spaces*(self.size+1)-1) + "\n")
+
+            if corf == "exit":
+                break
+
             while True:
                 try:
-                    i = int(input("Please input a row number between 0 and " + str(self.size-1) + " \n"))
+                    i = input("Please input a row number between 0 and " + str(self.size-1) + " \n")
+                    if i == "exit":
+                        done = True
+                        break
+                    else:
+                        i = int(i)
                     if i >= 0 and i <= self.size-1:
                         break
                     else:
                         print("Number not within specified range, please try again.")
                 except:
                     print("Specified input was not an integer, please try again.")
-            print()
+
+            if i == "exit":
+                break
+
+            print("-"*(spaces*(self.size+1)-1) + "\n")
 
             while True:
                 try:
-                    j = int(input("Please input a column number between 0 and " + str(self.size-1) + " \n"))
+                    j = input("Please input a column number between 0 and " + str(self.size-1) + " \n")
+                    if j == "exit":
+                        done = True
+                        break
+                    else:
+                        j = int(j)
                     if j >= 0 and j <= self.size-1:
                         break
                     else:
@@ -87,12 +110,20 @@ class playfield:
                 except:
                     print("Specified input was not an integer, please try again.")
             
+            if j == "exit":
+                break
+
             if corf == "1":
                 self.playfield[i][j] = "n"
             elif corf == "2":
                 self.playfield[i][j] = "f"
+
+            print("-"*(spaces*(self.size+1)-1) + "\n")
+
             print(self)
-        
+
+            print("-"*(spaces*(self.size+1)-1) + "\n")
+        print("THANK YOU FOR PLAYING!")
 pf = playfield(15,15,420)
 pf.initialise_game()
 pf.play_game()
