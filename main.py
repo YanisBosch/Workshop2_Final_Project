@@ -38,11 +38,15 @@ class playfield:
             free.remove(bomb)                                               #remove coordinates where bomb was placed from the free array
         self.bombs = bombs
     
-    def count_bombs_one(self,i:int,j:int):
+    def neighbour_slots(self,i,j):
         neighbours = [(min([max([i+x,0]),self.size-1]),min([max([j+y,0]),self.size-1])) for x in [-1,0,1] for y in [-1,0,1]]
         #list of coordinates of all neighbours of [i,j], where we limit ourselves to values in [0,self.size-1]
         neighbours = np.unique(neighbours,axis=0).tolist()      #remove any duplicates
         neighbours.remove([i,j])                                #remove the point [i,j] as it is not a neighbour of itself
+        return(neighbours)
+
+    def count_bombs_one(self,i:int,j:int):
+        neighbours = self.neighbour_slots(i,j)
         return([self.bombs[x[0]][x[1]] for x in neighbours].count("b"))     #return number of neighbours = "b"
     
     def count_bombs_all(self):
@@ -55,6 +59,34 @@ class playfield:
     def initialise_game(self):
         self.place_bombs()
         self.count_bombs_all()
+
+    def update_playfield(self,i,j):
+        #print("[" + str(i) + ";" + str(j) + "]")
+        if self.playfield[i][j] == "h":
+            self.playfield[i][j] = "n"
+            if self.bombs[i][j] == 0:
+                for ind in self.neighbour_slots(i,j):
+                    self.update_playfield(ind[0],ind[1])
+
+    def check_win(self,i,j):
+        """i,j = last move, makes computations easier"""
+        #STEP 1: CHECK IF ANY BOMBS WERE CLICKED
+        if (self.bombs[i][j] == "b") and (self.playfield[i][j] == "n"):
+            return("lost")
+        else:
+            winbyflag = True
+            winbyuncover = True
+            for l in range(self.size):
+                for m in range(self.size):
+                    if (self.bombs[l][m] == "b" and self.playfield[l][m] != "f"):
+                        winbyflag = False
+                    if (self.bombs[l][m] != "b" and self.playfield[l][m] != "n"):
+                        winbyuncover = False
+            print(winbyflag)
+            if winbyflag or winbyuncover:
+                return("win")
+            else:
+                return("continue")
 
     def play_game(self):
         spaces = len(str(self.size))+1
@@ -130,9 +162,15 @@ class playfield:
             #UPDATE GAME STATUS ACCORDINGLY
 
             if corf == "1":
-                self.playfield[i][j] = "n"
+
+                self.update_playfield(i,j)
             elif corf == "2":
-                self.playfield[i][j] = "f"
+                if self.playfield[i][j] == "f":
+                    self.playfield[i][j] = "n"
+                elif self.playfield[i][j] != "n":
+                    self.playfield[i][j] = "f"
+
+            res = self.check_win(i,j)
 
             #--------------
 
@@ -144,8 +182,15 @@ class playfield:
 
             #--------------
 
+            if res == "win":
+                print("CONGRATS, YOU WON!")
+                done = True
+            elif res == "lost":
+                print("SORRY, YOU LOST:(")
+                done = True
+
         print("THANK YOU FOR PLAYING!")
-pf = playfield(15,15,420)
+pf = playfield(15,10,420)
 pf.initialise_game()
 pf.play_game()
 
