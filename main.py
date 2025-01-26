@@ -2,6 +2,9 @@ import random
 import numpy as np
 
 class playfield:
+
+    #INITIALISATION FUNCTION
+
     def __init__(self,size,numbombs,seed):
         self.size = size                    #size of one side of the square arena
         self.numbombs = numbombs            #number of bombs to play with
@@ -9,6 +12,10 @@ class playfield:
         self.bombs = [[0 for x in range(self.size)] for y in range(self.size)]          #"b" = bomb, number = number of adjacent bombs
         self.playfield = [["h" for x in range(self.size)] for y in range(self.size)]    #"f" = flag, "n" = show number, "h" = hidden
         self.flagnum = 0                    #to limit total available number of flags
+
+    #--------------
+
+    #OVERWRITE PRINT FUNCTION TO EASILY SHOW CURRENT STATE OF THE GAME
 
     def __str__(self):
         spaces = len(str(self.size))+1      #variable used for clean printing of the arena
@@ -27,8 +34,13 @@ class playfield:
                     res += "x" + (spaces-1)* " "            #if the spot is not uncovered and not flagged we just show an X
             res += "\n"
         return(res)
+    
+    #--------------
+
+    #RANDOMLY PLACE BOMBS
 
     def place_bombs(self):
+        """Places numbomb bombs in the bombs 2D array at random, uses the seed given to the object"""
         random.seed(self.seed)
         bombs = [[0 for x in range(self.size)] for y in range(self.size)]   #b = bomb, number = number of bombs next to square
         free = [[x,y] for x in range(self.size) for y in range(self.size)]  #coordinates where no bombs were placed
@@ -38,63 +50,126 @@ class playfield:
             bombs[bomb[0]][bomb[1]] = "b"                                   #at the chosen index place a bomb
             free.remove(bomb)                                               #remove coordinates where bomb was placed from the free array
         self.bombs = bombs
+
+    #--------------
+
+    #RETURN A LIST OF ALL NEIGHBOURS OF A POINT
     
     def neighbour_slots(self,i,j):
+        """i = row, j = column, returns an array with the positions of the nieghbours of [i,j], excluding any that
+        would exit the arena."""
         neighbours = [(min([max([i+x,0]),self.size-1]),min([max([j+y,0]),self.size-1])) for x in [-1,0,1] for y in [-1,0,1]]
         #list of coordinates of all neighbours of [i,j], where we limit ourselves to values in [0,self.size-1]
         neighbours = np.unique(neighbours,axis=0).tolist()      #remove any duplicates
         neighbours.remove([i,j])                                #remove the point [i,j] as it is not a neighbour of itself
         return(neighbours)
+    
+    #--------------
+
+    #COUNT THE NEIGHBOURING NUMBER OF BOMBS
 
     def count_bombs_one(self,i:int,j:int):
-        neighbours = self.neighbour_slots(i,j)
+        """i = row, j = column, returns the number of bombs around the slot [i,j]"""
+        neighbours = self.neighbour_slots(i,j)                              #obtain positions of neighbours
         return([self.bombs[x[0]][x[1]] for x in neighbours].count("b"))     #return number of neighbours = "b"
     
+    #--------------
+
+    #COUNT NEIGHBOURING BOMBS FOR ALL SLOTS
+    
     def count_bombs_all(self):
+        """Updates the self.bombs array so that each slot that is not a bomb contains the number of neighbouring bombs."""
         for i in range(self.size):
             for j in range(self.size):
                 if self.bombs[i][j] != "b":                     #if not a bomb replace the entry in bombs with the number of 
                                                                 #neighbouring bombs
                     self.bombs[i][j] = self.count_bombs_one(i,j)
 
+    #--------------
+
+    #INITIALISE THE BOMBS MATRIX
+
     def initialise_game(self):
+        self.bombs = [[0 for x in range(self.size)] for y in range(self.size)]              #reset matrices to ensure 
+        self.playfield  = [["h" for x in range(self.size)] for y in range(self.size)]       #repeatability
         self.place_bombs()
         self.count_bombs_all()
 
+    #--------------
+
+    #UPDATE THE MATRICES BASED ON THE PLAYERS LAST MOVE IF THE PLAYER CLICKED ON A SPOT WITH
+
     def update_playfield(self,i,j):
-        #print("[" + str(i) + ";" + str(j) + "]")
-        if self.playfield[i][j] == "h":
-            self.playfield[i][j] = "n"
-            if self.bombs[i][j] == 0:
+        """i = row, j = column, recursive function to show whole block of spots connected to the 0"""
+        if self.playfield[i][j] == "h":         #to avoid endless recursion, and to not show bombs
+            self.playfield[i][j] = "n"          #set spot to visible
+            if self.bombs[i][j] == 0:           #only keep on iterating from spots with no neighbouring bombs
                 for ind in self.neighbour_slots(i,j):
                     self.update_playfield(ind[0],ind[1])
 
+    #--------------
+
+    #CHECK WETHER THE PLAYER WON OR NOT
+
     def check_win(self,i,j):
-        """i,j = last move, makes computations easier"""
+        """i,j = last move, makes computations easier
+        The player can win in two ways:
+        1)By placing a flag on each bomb (=winbyflag)
+        2)By discovering all spots without bombs (=winbyuncover)
+        Returns:
+        1)\"lost\" if the player lost
+        2)\"win\" if the player won
+        3)\"continue\" otherwhise"""
+
         #STEP 1: CHECK IF ANY BOMBS WERE CLICKED
-        if (self.bombs[i][j] == "b") and (self.playfield[i][j] == "n"):
-            return("lost")
+
+        if (self.bombs[i][j] == "b") and (self.playfield[i][j] == "n"): #check if playfield is n to avoid making player
+            return("lost")                                              #lose for placing a flag on a bomb
+        
+        #--------------
+
+        #STEP 2: CHECK IF PLAYER SATISFIES WIN CONDITIONS
+
         else:
             winbyflag = True
             winbyuncover = True
             for l in range(self.size):
                 for m in range(self.size):
-                    if (self.bombs[l][m] == "b" and self.playfield[l][m] != "f"):
-                        winbyflag = False
-                    if (self.bombs[l][m] != "b" and self.playfield[l][m] != "n"):
-                        winbyuncover = False
+                    if (self.bombs[l][m] == "b" and self.playfield[l][m] != "f"):       #if a bomb has no flag on it, the win
+                        winbyflag = False                                               #condition is not satisfied
+                    if (self.bombs[l][m] != "b" and self.playfield[l][m] != "n"):       #if a spot with no bomb is not discovered
+                        winbyuncover = False                                            #the win condition is not satisfied
             if winbyflag or winbyuncover:
                 return("win")
-            else:
+            else:                                 #if the player did not win or lose we return "continue"
                 return("continue")
+            
+        #--------------
+            
+    #----------------
 
     def play_game(self):
-        spaces = len(str(self.size))+1
+        """Initialises the game and launches it."""
+
+        #STEP 1: INITIALISE
+
+        self.initialise_game()
+        done = False
+
+        #--------------
+
+        #STEP 2: RULES
+
+        spaces = len(str(self.size))+1              #used for clean printing of the dotted lines
         print("After each round please choose first whether to place a flag or check, and then input the row and column number when prompted. \nType exit at any time to exit the game.")
         print("You will win if you place a flag on each bomb, or discover all spots without bombs. You can place at most " +str(self.numbombs) + " flags.")
         print("There are " + str(self.numbombs) + " bombs to be found.")
-        done = False
-        while not done:
+
+        #--------------
+        
+        #STEP 3: THE GAME
+
+        while not done:         #endless loop until the player loses or wins
 
             #INPUT TO KNOW WHETHER TO CHECK FOR BOMBS OR PLACE FLAG
 
@@ -164,8 +239,7 @@ class playfield:
             #UPDATE GAME STATUS ACCORDINGLY
 
             if corf == "1":
-
-                self.update_playfield(i,j)
+                self.update_playfield(i,j)                  #changes spot to shown (and if bombs = 0 also the neighbours)
             elif corf == "2":
                 if self.playfield[i][j] == "f":             #if there is already a flag remove it
                     self.playfield[i][j] = "n"
@@ -177,7 +251,7 @@ class playfield:
                     else:
                         print("You cannot place any more flags.")
 
-            res = self.check_win(i,j)
+            res = self.check_win(i,j)                       #check if player wins, loses or continues
 
             #--------------
 
@@ -191,20 +265,17 @@ class playfield:
 
             if res == "win":
                 print("CONGRATS, YOU WON!")
-                done = True
+                done = True                 #ends game loop
             elif res == "lost":
                 print("SORRY, YOU LOST:(")
-                done = True
+                done = True                 #ends game loop
 
         print("THANK YOU FOR PLAYING!")
-
-print(np.version.version)
 
 def main(size,numbombs,seed):
     size = max([min([50,size]),1])
     numbombs = max([numbombs,1])
     pf = playfield(size,numbombs,seed)
-    pf.initialise_game()
     pf.play_game()
 
 main(15,15,420)
