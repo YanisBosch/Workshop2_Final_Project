@@ -24,7 +24,7 @@ class playfield:
                 elif self.playfield[i][j] == "n":           #if spot is uncovered we show the number of neighbour bombs
                     res += str(self.bombs[i][j]) + (spaces-1)* " "
                 else:
-                    res += "X" + (spaces-1)* " "            #if the spot is not uncovered and not flagged we just show an X
+                    res += "x" + (spaces-1)* " "            #if the spot is not uncovered and not flagged we just show an X
             res += "\n"
         return(res)
 
@@ -198,8 +198,13 @@ class playfield:
 
         print("THANK YOU FOR PLAYING!")
 
-pf = playfield(15,1,420)
-pf.initialise_game()
-pf.play_game()
+print(np.version.version)
 
+def main(size,numbombs,seed):
+    size = max([min([50,size]),1])
+    numbombs = max([numbombs,1])
+    pf = playfield(size,numbombs,seed)
+    pf.initialise_game()
+    pf.play_game()
 
+main(15,15,420)
