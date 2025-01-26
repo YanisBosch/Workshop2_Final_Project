@@ -1,7 +1,7 @@
-FROM python:3.12.8-bookworm
+FROM python:3.12.8-slim-bookworm
 
-COPY Requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt
+COPY Requirements.txt ./
+RUN pip install --no-cache-dir -r Requirements.txt
 
 COPY main.py ./
 
