@@ -1,6 +1,25 @@
 import random
 import numpy as np
 
+
+def get_number_input(text:str,low_bound:int,up_bound:int):
+    """function to get user input for an integer within [low_bound,up_bound] with integrated error handling. Also allows user to input exit to quit game."""
+    while True:
+        try:
+            num = input(text)
+            if num.lower() == "exit":                     #we add a break if the player wants to stop, and set done to True to finish loop
+                return("exit")
+            else:
+                num = int(num)                      #tries to convert j to integer
+            if num >= low_bound and num <= up_bound:     #if j is also in the right range we break and keep on going
+                break
+            else:
+                print("Number not within specified range, please try again.")        #else prompt to retry
+        except:
+            print("Specified input was not an integer, please try again.")           #else prompt to retry
+    return(num)
+
+
 class playfield:
 
     #INITIALISATION FUNCTION
@@ -173,41 +192,24 @@ class playfield:
 
             #INPUT TO KNOW WHETHER TO CHECK FOR BOMBS OR PLACE FLAG
 
-            while True:
-                corf = input("Please select 1 to check for bombs or 2 to place a flag \n")
-                if corf == "1" or corf == "2":      #if input is correct we keep on going
-                    break
-                elif corf == "exit":                #we add a break if the player wants to stop, and set done to True to finish loop
-                    done = True
-                    break
-                else:
-                    print("Incorrect input, please try again.")     #Else prompt player to retry and go through loop again
+            print("\n" + "-"*(spaces*(self.size+1)-1) + "\n")
 
-            print("\n" + "-"*(spaces*(self.size+1)-1) + "\n")              #For readability
+            corf = get_number_input("[1] CHECK FOR BOMB [2] PLACE/REMOVE FLAG\n",1,2)
             
-            if corf == "exit":                      #break again to exit second loop
+            if corf == "exit":                      #break to exit loop
+                done = True
                 break
 
             #--------------
 
             #INPUT TO KNOW WHICH ROW TO CHECK
 
-            while True:
-                try:
-                    i = input("Please input a row number between 0 and " + str(self.size-1) + " \n")
-                    if i == "exit":             
-                        done = True                 #we add a break if the player wants to stop, and set done to True to finish loop
-                        break
-                    else:
-                        i = int(i)                      #tries to convert i to integer
-                    if i >= 0 and i <= self.size-1:     #if i is also in the right range we break and keep on going
-                        break
-                    else:
-                        print("Number not within specified range, please try again.")       #else prompt to retry
-                except:
-                    print("Specified input was not an integer, please try again.")          #else prompt to retry
+            print("\n" + "-"*(spaces*(self.size+1)-1) + "\n")
 
-            if i == "exit":                             #break again to exit second loop
+            i = get_number_input("Please input a row number in {0,...," + str(self.size-1) + "}\n",0,self.size-1)
+
+            if i == "exit":                             #break to exit loop
+                done = True
                 break
 
             #--------------
@@ -216,31 +218,19 @@ class playfield:
 
             print("\n" + "-"*(spaces*(self.size+1)-1) + "\n")
 
-            while True:
-                try:
-                    j = input("Please input a column number between 0 and " + str(self.size-1) + " \n")
-                    if j == "exit":                     #we add a break if the player wants to stop, and set done to True to finish loop
-                        done = True
-                        break
-                    else:
-                        j = int(j)                      #tries to convert j to integer
-                    if j >= 0 and j <= self.size-1:     #if j is also in the right range we break and keep on going
-                        break
-                    else:
-                        print("Number not within specified range, please try again.")        #else prompt to retry
-                except:
-                    print("Specified input was not an integer, please try again.")           #else prompt to retry
+            j = get_number_input("Please input a row number in {0,...," + str(self.size-1) + "}\n",0,self.size-1)
 
-            if j == "exit":                             #break again to exit second loop
+            if j == "exit":                             #break to exit loop
+                done = True
                 break
 
             #--------------
 
             #UPDATE GAME STATUS ACCORDINGLY
 
-            if corf == "1":
+            if corf == 1:
                 self.update_playfield(i,j)                  #changes spot to shown (and if bombs = 0 also the neighbours)
-            elif corf == "2":
+            elif corf == 2:
                 if self.playfield[i][j] == "f":             #if there is already a flag remove it
                     self.playfield[i][j] = "n"
                     self.flagnum -= 1                       #update flag number counter
@@ -252,6 +242,8 @@ class playfield:
                         print("You cannot place any more flags.")
 
             res = self.check_win(i,j)                       #check if player wins, loses or continues
+            if (res == "lost") or (res == "win"):                               #show all spots if player loses
+                self.playfield = [["n" for x in range(self.size)] for y in range(self.size)]
 
             #--------------
 
@@ -272,10 +264,10 @@ class playfield:
 
         print("THANK YOU FOR PLAYING!")
 
-def main(size,numbombs,seed):
-    size = max([min([50,size]),1])
-    numbombs = max([numbombs,1])
+def main(seed):
+    size = get_number_input("Welcome to minesweeper! Please start off by selecting a playing field size within {1,...,20}:\n",1,20)
+    numbombs = get_number_input("Please select the number of bombs to be placed within {1,..." + str(size**2) + "}:\n",1,size**2)
     pf = playfield(size,numbombs,seed)
     pf.play_game()
 
-main(15,15,420)
+main(420)
