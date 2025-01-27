@@ -266,7 +266,13 @@ class playfield:
 
 def main(seed):
     size = get_number_input("Welcome to minesweeper! Please start off by selecting a playing field size within {1,...,20}:\n",1,20)
+    if size == "exit":
+        print("THANK YOU FOR PLAYING!")
+        return
     numbombs = get_number_input("Please select the number of bombs to be placed within {1,..." + str(size**2) + "}:\n",1,size**2)
+    if numbombs == "exit":
+        print("THANK YOU FOR PLAYING!")
+        return
     pf = playfield(size,numbombs,seed)
     pf.play_game()
 
