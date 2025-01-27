@@ -242,7 +242,7 @@ class playfield:
                         print("You cannot place any more flags.")
 
             res = self.check_win(i,j)                       #check if player wins, loses or continues
-            if (res == "lost") or (res == "win"):                               #show all spots if player loses
+            if (res == "lost") or (res == "win"):           #show all spots if player loses or wins
                 self.playfield = [["n" for x in range(self.size)] for y in range(self.size)]
 
             #--------------
